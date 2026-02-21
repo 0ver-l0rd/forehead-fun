@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Heads Up! Party Game
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
