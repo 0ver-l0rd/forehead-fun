@@ -1,9 +1,7 @@
 import { useGameStore } from '@/store/gameStore';
 import HomeView from '@/components/game/HomeView';
-import RoleSelectView from '@/components/game/RoleSelectView';
 import GenreSelectView from '@/components/game/GenreSelectView';
-import ClueGiverView from '@/components/game/ClueGiverView';
-import GuesserView from '@/components/game/GuesserView';
+import PlayerView from '@/components/game/PlayerView';
 
 const Index = () => {
   const view = useGameStore((s) => s.view);
@@ -11,14 +9,10 @@ const Index = () => {
   switch (view) {
     case 'home':
       return <HomeView />;
-    case 'role-select':
-      return <RoleSelectView />;
     case 'genre-select':
       return <GenreSelectView />;
-    case 'clue-giver':
-      return <ClueGiverView />;
-    case 'guesser':
-      return <GuesserView />;
+    case 'player':
+      return <PlayerView />;
     default:
       return <HomeView />;
   }
