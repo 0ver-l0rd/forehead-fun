@@ -2,27 +2,36 @@ import { useState } from 'react';
 import { useGameStore, generateRoomCode } from '@/store/gameStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Settings } from 'lucide-react';
+import SettingsModal from './SettingsModal';
 
 export default function HomeView() {
-  const { setView, setRoomCode } = useGameStore();
+  const { setView, setRoomCode, setShowSettings } = useGameStore();
   const [joinCode, setJoinCode] = useState('');
   const [mode, setMode] = useState<'idle' | 'join'>('idle');
 
   const handleCreate = () => {
     const code = generateRoomCode();
     setRoomCode(code);
-    setView('role-select');
+    setView('genre-select');
   };
 
   const handleJoin = () => {
     if (joinCode.length === 4) {
       setRoomCode(joinCode.toUpperCase());
-      setView('role-select');
+      setView('genre-select');
     }
   };
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 px-6">
+      {/* Settings */}
+      <div className="absolute right-3 top-3">
+        <Button variant="ghost" size="icon" onClick={() => setShowSettings(true)} className="text-muted-foreground/40 h-8 w-8">
+          <Settings className="h-4 w-4" />
+        </Button>
+      </div>
+
       <div className="animate-slide-up text-center">
         <h1 className="font-display text-5xl font-black tracking-wider text-primary neon-text-strong">
           HEADS UP
@@ -71,6 +80,8 @@ export default function HomeView() {
           </div>
         )}
       </div>
+
+      <SettingsModal />
     </div>
   );
 }

@@ -1,41 +1,44 @@
 import { create } from 'zustand';
 import { Genre, Character } from '@/data/characters';
 
-export type GameView = 'home' | 'role-select' | 'genre-select' | 'clue-giver' | 'guesser';
-export type Role = 'guesser' | 'clue-giver';
+export type GameView = 'home' | 'genre-select' | 'player';
 
 interface GameState {
   view: GameView;
   roomCode: string;
-  role: Role | null;
   genre: Genre | null;
   currentCharacter: Character | null;
   shownCharacters: string[];
+  countdownDuration: number;
+  showSettings: boolean;
 
   setView: (view: GameView) => void;
   setRoomCode: (code: string) => void;
-  setRole: (role: Role) => void;
   setGenre: (genre: Genre) => void;
   setCurrentCharacter: (char: Character | null) => void;
   addShownCharacter: (name: string) => void;
+  setCountdownDuration: (seconds: number) => void;
+  setShowSettings: (show: boolean) => void;
   resetGame: () => void;
 }
 
 export const useGameStore = create<GameState>((set) => ({
   view: 'home',
   roomCode: '',
-  role: null,
   genre: null,
   currentCharacter: null,
   shownCharacters: [],
+  countdownDuration: 3,
+  showSettings: false,
 
   setView: (view) => set({ view }),
   setRoomCode: (roomCode) => set({ roomCode }),
-  setRole: (role) => set({ role }),
   setGenre: (genre) => set({ genre }),
   setCurrentCharacter: (currentCharacter) => set({ currentCharacter }),
   addShownCharacter: (name) => set((s) => ({ shownCharacters: [...s.shownCharacters, name] })),
-  resetGame: () => set({ view: 'home', roomCode: '', role: null, genre: null, currentCharacter: null, shownCharacters: [] }),
+  setCountdownDuration: (countdownDuration) => set({ countdownDuration }),
+  setShowSettings: (showSettings) => set({ showSettings }),
+  resetGame: () => set({ view: 'home', roomCode: '', genre: null, currentCharacter: null, shownCharacters: [] }),
 }));
 
 export function generateRoomCode(): string {

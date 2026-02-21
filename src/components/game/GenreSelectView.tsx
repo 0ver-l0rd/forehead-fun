@@ -1,22 +1,30 @@
 import { useGameStore } from '@/store/gameStore';
 import { GENRES, GENRE_EMOJIS, Genre } from '@/data/characters';
 import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 export default function GenreSelectView() {
-  const { setGenre, setView } = useGameStore();
+  const { roomCode, setGenre, setView, resetGame } = useGameStore();
 
   const handleSelect = (genre: Genre) => {
     setGenre(genre);
-    setView('clue-giver');
+    setView('player');
   };
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 px-6">
+      <div className="absolute left-3 top-3">
+        <Button variant="ghost" size="icon" onClick={resetGame} className="text-muted-foreground/40 h-8 w-8">
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+      </div>
+
       <div className="text-center animate-slide-up">
+        <p className="font-display text-xs tracking-[0.3em] text-primary/60 mb-2">{roomCode}</p>
         <h3 className="font-display text-xl font-bold tracking-wider text-foreground">
           Pick a Category
         </h3>
-        <p className="mt-1 text-sm text-muted-foreground">Choose wisely, clue giver</p>
+        <p className="mt-1 text-sm text-muted-foreground">Everyone puts phone on forehead</p>
       </div>
 
       <div className="grid w-full max-w-xs grid-cols-1 gap-3 animate-slide-up" style={{ animationDelay: '0.1s' }}>
