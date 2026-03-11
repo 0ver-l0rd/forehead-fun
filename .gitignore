@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Secrets & keys
+.env
+*.jks
+
+# Bun
+bun.lockb

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Guess Who</string>
+    <string name="title_activity_main">Guess Who</string>
+    <string name="package_name">com.guesswho.app</string>
+    <string name="custom_url_scheme">com.guesswho.app</string>
+</resources>

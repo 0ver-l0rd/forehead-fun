@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Guess Who",
+    "slug": "guess-who",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./public/favicon.ico",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.zer0dayzolomon.guesswho"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./public/favicon.ico",
+        "backgroundColor": "#000000"
+      },
+      "package": "com.zer0dayzolomon.guesswho"
+    },
+    "web": {
+      "favicon": "./public/favicon.ico"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "21153c01-aad5-4802-93f6-28730a611ad0"
+      }
+    }
+  }
+}

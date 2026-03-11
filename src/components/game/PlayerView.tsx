@@ -2,13 +2,14 @@ import { useEffect, useState, useCallback } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { getRandomCharacter } from '@/data/characters';
 import { fetchCharacterImage } from '@/lib/fetchCharacterImage';
+import { generateCharacterImage } from '@/lib/openai';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Info, RefreshCw } from 'lucide-react';
 
 type Phase = 'idle' | 'countdown' | 'reveal';
 
 export default function PlayerView() {
-  const { genre, roomCode, currentCharacter, shownCharacters, countdownDuration, setCurrentCharacter, addShownCharacter, resetGame } = useGameStore();
+  const { genre, roomCode, currentCharacter, shownCharacters, countdownDuration, setCurrentCharacter, addShownCharacter, resetGame, customCharacters } = useGameStore();
   const [phase, setPhase] = useState<Phase>('idle');
   const [count, setCount] = useState(countdownDuration);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -17,18 +18,43 @@ export default function PlayerView() {
 
   const pickCharacter = useCallback(() => {
     if (!genre) return;
-    const char = getRandomCharacter(genre, shownCharacters);
+    // Use customPool if we are in AI mode (genre matches custom characters)
+    const char = getRandomCharacter(genre, shownCharacters, customCharacters);
     setCurrentCharacter(char);
     setShowInfo(false);
     setImageUrl(null);
     if (char) {
       setImageLoading(true);
-      fetchCharacterImage(char.name).then((url) => {
-        setImageUrl(url);
+
+      // 1. If we already have a hardcoded URL, use it
+      if (char.image) {
+        setImageUrl(char.image);
         setImageLoading(false);
-      });
+      }
+      // 2. If it's a custom character (from AI stack), generate an image via DALL-E
+      else if (customCharacters.some(c => c.name === char.name)) {
+        generateCharacterImage(char.name, char.description)
+          .then((url) => {
+            setImageUrl(url);
+            setImageLoading(false);
+          })
+          .catch(() => {
+            // Fallback to standard fetch if DALL-E fails
+            fetchCharacterImage(char.name, genre).then((url) => {
+              setImageUrl(url);
+              setImageLoading(false);
+            });
+          });
+      }
+      // 3. Otherwise use standard fetching (Wikipedia/Jikan)
+      else {
+        fetchCharacterImage(char.name, genre).then((url) => {
+          setImageUrl(url);
+          setImageLoading(false);
+        });
+      }
     }
-  }, [genre, shownCharacters, setCurrentCharacter]);
+  }, [genre, shownCharacters, setCurrentCharacter, customCharacters]);
 
   // Start countdown
   const startCountdown = () => {
@@ -114,65 +140,91 @@ export default function PlayerView() {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col items-center justify-between bg-background p-4">
-      {/* Top bar - tiny, minimal */}
-      <div className="flex w-full items-center justify-between pt-1">
-        <Button variant="ghost" size="icon" onClick={resetGame} className="text-muted-foreground/30 h-7 w-7">
-          <ArrowLeft className="h-3 w-3" />
-        </Button>
-        <p className="font-display text-[10px] tracking-[0.3em] text-primary/30">{roomCode}</p>
-        <div className="w-7" />
-      </div>
+    <div className="fixed inset-0 flex items-center justify-center bg-background sm:p-4 overflow-hidden">
+      {/* Container: Fullscreen on mobile, centered card on desktop */}
+      <div className="relative w-full h-full sm:max-w-md sm:h-[85vh] sm:rounded-[2.5rem] sm:aspect-[9/16] bg-background sm:shadow-2xl sm:border border-primary/10 overflow-hidden flex flex-col animate-slide-up">
 
-      {/* Character display - designed for forehead viewing */}
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 animate-slide-up w-full max-w-sm">
-        {/* Image */}
-        {imageLoading ? (
-          <div className="h-36 w-36 rounded-xl bg-secondary/50 animate-pulse" />
-        ) : imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={currentCharacter.name}
-            className="h-36 w-36 rounded-xl object-cover border-2 border-primary/30 neon-box"
-          />
-        ) : (
-          <div className="h-36 w-36 rounded-xl bg-secondary/30 flex items-center justify-center border border-border/30">
-            <span className="text-4xl">🎭</span>
+        {/* Top bar - floating over image */}
+        <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-4 sm:px-6 sm:pt-6">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={resetGame}
+            className="text-white/40 hover:text-white/100 h-10 w-10 backdrop-blur-md bg-black/30 rounded-full border border-white/10 transition-all active:scale-95"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex flex-col items-center">
+            <p className="font-display text-[10px] tracking-[0.3em] text-white/50 uppercase">{roomCode}</p>
+            <p className="font-display text-[8px] tracking-widest text-primary/60 uppercase">{genre}</p>
           </div>
-        )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowInfo(!showInfo)}
+            className={`h-10 w-10 backdrop-blur-md rounded-full border border-white/10 transition-all active:scale-95 ${showInfo ? 'bg-primary/40 text-white' : 'bg-black/30 text-white/40'
+              }`}
+          >
+            <Info className="h-5 w-5" />
+          </Button>
+        </div>
 
-        {/* Name - BIG for forehead */}
-        <h1 className="font-display text-4xl sm:text-6xl font-black tracking-wider text-primary neon-text-strong uppercase text-center leading-tight break-words px-2">
-          {currentCharacter.name}
-        </h1>
+        {/* Giant image area */}
+        <div className="relative flex-1 w-full overflow-hidden">
+          {imageLoading ? (
+            <div className="absolute inset-0 bg-secondary/30 animate-pulse flex items-center justify-center">
+              <div className="flex flex-col items-center gap-4">
+                <span className="text-7xl animate-bounce">🎭</span>
+                <p className="font-display text-xs tracking-widest text-primary/40 animate-pulse">FINDING CHARACTER...</p>
+              </div>
+            </div>
+          ) : imageUrl ? (
+            <div className="absolute inset-0 w-full h-full">
+              <img
+                src={imageUrl}
+                alt={currentCharacter.name}
+                className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+              />
+              {/* Artistic overlays */}
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-black/40" />
+            </div>
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-secondary/40 via-background to-background flex items-center justify-center">
+              <span className="text-[10rem] opacity-20">🎭</span>
+            </div>
+          )}
 
-        {/* Info toggle */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowInfo(!showInfo)}
-          className="gap-2 text-muted-foreground/50 hover:text-muted-foreground text-xs"
-        >
-          <Info className="h-3 w-3" />
-          {showInfo ? 'Hide' : 'Who?'}
-        </Button>
-        {showInfo && (
-          <p className="text-sm leading-relaxed text-muted-foreground bg-secondary/50 rounded-lg p-3 animate-slide-up text-center">
-            {currentCharacter.description}
-          </p>
-        )}
-      </div>
+          {/* Character Info Overlay */}
+          <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8 flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center text-center space-y-2">
+              <h1 className="font-display text-4xl sm:text-5xl font-black tracking-tighter text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] uppercase leading-[0.9] break-words px-2">
+                {currentCharacter.name}
+              </h1>
+              <div className="h-1 w-12 bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+            </div>
 
-      {/* Next button */}
-      <div className="w-full max-w-sm pb-4">
-        <Button
-          size="lg"
-          onClick={handleNext}
-          className="w-full h-14 font-display text-base tracking-wider neon-box gap-2"
-        >
-          <RefreshCw className="h-5 w-5" />
-          Next Character
-        </Button>
+            {/* Description Tooltip */}
+            {showInfo && (
+              <div className="w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <p className="text-sm leading-relaxed text-zinc-200 bg-black/80 backdrop-blur-xl rounded-2xl p-4 border border-white/10 text-center shadow-2xl">
+                  {currentCharacter.description}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Control Area */}
+        <div className="w-full px-6 py-6 sm:pb-8 shrink-0 bg-gradient-to-t from-background to-transparent">
+          <Button
+            size="lg"
+            onClick={handleNext}
+            className="w-full h-16 rounded-2xl font-display text-lg tracking-widest neon-box gap-3 group transition-all"
+          >
+            <RefreshCw className="h-6 w-6 transition-transform group-active:rotate-180 duration-500" />
+            NEXT SOUL
+          </Button>
+        </div>
       </div>
     </div>
   );

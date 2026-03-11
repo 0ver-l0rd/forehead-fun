@@ -11,6 +11,8 @@ interface GameState {
   shownCharacters: string[];
   countdownDuration: number;
   showSettings: boolean;
+  customCharacters: Character[]; // AI Generated Stack
+  isGenerating: boolean;
 
   setView: (view: GameView) => void;
   setRoomCode: (code: string) => void;
@@ -19,6 +21,8 @@ interface GameState {
   addShownCharacter: (name: string) => void;
   setCountdownDuration: (seconds: number) => void;
   setShowSettings: (show: boolean) => void;
+  setCustomCharacters: (chars: Character[]) => void;
+  setIsGenerating: (is: boolean) => void;
   resetGame: () => void;
 }
 
@@ -30,6 +34,8 @@ export const useGameStore = create<GameState>((set) => ({
   shownCharacters: [],
   countdownDuration: 3,
   showSettings: false,
+  customCharacters: [],
+  isGenerating: false,
 
   setView: (view) => set({ view }),
   setRoomCode: (roomCode) => set({ roomCode }),
@@ -38,7 +44,9 @@ export const useGameStore = create<GameState>((set) => ({
   addShownCharacter: (name) => set((s) => ({ shownCharacters: [...s.shownCharacters, name] })),
   setCountdownDuration: (countdownDuration) => set({ countdownDuration }),
   setShowSettings: (showSettings) => set({ showSettings }),
-  resetGame: () => set({ view: 'home', roomCode: '', genre: null, currentCharacter: null, shownCharacters: [] }),
+  setCustomCharacters: (customCharacters) => set({ customCharacters }),
+  setIsGenerating: (isGenerating) => set({ isGenerating }),
+  resetGame: () => set({ view: 'home', roomCode: '', genre: null, currentCharacter: null, shownCharacters: [], customCharacters: [], isGenerating: false }),
 }));
 
 export function generateRoomCode(): string {

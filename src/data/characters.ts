@@ -2,13 +2,15 @@ export interface Character {
   name: string;
   genre: Genre;
   description: string;
+  image?: string; // Hardcoded high-quality image URL
 }
 
-export type Genre = 
+export type Genre =
   | "Anime & Animations"
   | "Spies & Action"
   | "Video Game Heroes"
-  | "General Celebrities";
+  | "General Celebrities"
+  | (string & {}); // Allow custom AI themes while keeping autocompletion
 
 export const GENRES: Genre[] = [
   "Anime & Animations",
@@ -26,7 +28,12 @@ export const GENRE_EMOJIS: Record<Genre, string> = {
 
 export const characters: Character[] = [
   // Anime & Animations
-  { name: "Rimuru Tempest", genre: "Anime & Animations", description: "An overpowered main character who reincarnated as a slime and built a massive monster nation." },
+  {
+    name: "Rimuru Tempest",
+    genre: "Anime & Animations",
+    description: "An overpowered main character who reincarnated as a slime and built a massive monster nation.",
+    image: "https://images.alphacoders.com/112/1126569.jpg"
+  },
   { name: "Goku", genre: "Anime & Animations", description: "A Saiyan warrior who constantly trains to become the strongest fighter in the universe." },
   { name: "Naruto Uzumaki", genre: "Anime & Animations", description: "A hyperactive ninja who dreams of becoming Hokage and carries a nine-tailed fox inside him." },
   { name: "Luffy", genre: "Anime & Animations", description: "A rubber-bodied pirate captain searching for the One Piece treasure to become King of the Pirates." },
@@ -57,8 +64,18 @@ export const characters: Character[] = [
   { name: "Napoleon Solo", genre: "Spies & Action", description: "A suave CIA agent forced to team up with a KGB operative during the Cold War." },
 
   // Video Game Heroes
-  { name: "Geralt of Rivia", genre: "Video Game Heroes", description: "A mutated monster hunter known as a Witcher, wielding two swords." },
-  { name: "Master Chief", genre: "Video Game Heroes", description: "A supersoldier in green Spartan armor fighting aliens to save humanity." },
+  {
+    name: "Geralt of Rivia",
+    genre: "Video Game Heroes",
+    description: "A mutated monster hunter known as a Witcher, wielding two swords.",
+    image: "https://images2.alphacoders.com/716/716335.jpg"
+  },
+  {
+    name: "Master Chief",
+    genre: "Video Game Heroes",
+    description: "A supersoldier in green Spartan armor fighting aliens to save humanity.",
+    image: "https://images4.alphacoders.com/106/1061919.jpg"
+  },
   { name: "Mario", genre: "Video Game Heroes", description: "A mustached Italian plumber who rescues Princess Peach from Bowser." },
   { name: "Link", genre: "Video Game Heroes", description: "The Hero of Hyrule who wields the Master Sword to defeat Ganon." },
   { name: "Kratos", genre: "Video Game Heroes", description: "A Spartan warrior who killed Greek gods and now lives among Norse ones." },
@@ -91,8 +108,11 @@ export function getCharactersByGenre(genre: Genre): Character[] {
   return characters.filter(c => c.genre === genre);
 }
 
-export function getRandomCharacter(genre: Genre, exclude?: string[]): Character | null {
-  const pool = getCharactersByGenre(genre).filter(c => !exclude?.includes(c.name));
+export function getRandomCharacter(genre: Genre, exclude?: string[], customPool?: Character[]): Character | null {
+  const pool = (customPool && customPool.length > 0)
+    ? customPool.filter(c => !exclude?.includes(c.name))
+    : getCharactersByGenre(genre).filter(c => !exclude?.includes(c.name));
+
   if (pool.length === 0) return null;
   return pool[Math.floor(Math.random() * pool.length)];
 }
